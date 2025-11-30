@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BRIDGE</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>BRIDGE</h1>
+
+  <div id="instructions">
+    Change one letter at a time to build a bridge from the start word to the end word.<br>
+    Letters can be rearranged, and each step must be a valid 5-letter word. <br>
+  </div>
+
+  <div id="puzzle-info"></div>
+
+  <div id="start-word" class="endpoint"></div>
+  <div id="ladder"></div>
+  <div id="end-word" class="endpoint"></div>
+
+    <input id="guess-input" maxlength="5" autocapitalize="none" />
+    <button id="submit-btn">Add Step</button>  
+
+  <div id="message"></div>
+
+  <div id="next-banner" class="hidden">
+    New Bridge Tomorrow!
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- ⬇️ IMPORTANT: game.js is now a module -->
+  <script type="module" src="game.js"></script>
+</body>
+</html>
