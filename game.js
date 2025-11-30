@@ -18,8 +18,12 @@ const endWord = puzzle.end;
 
 
 // --- DOM ELEMENTS ---
-document.getElementById("start-word").textContent = startWord.toUpperCase();
-document.getElementById("end-word").textContent = endWord.toUpperCase();
+const startContainer = document.getElementById("start-word");
+const endContainer = document.getElementById("end-word");
+
+startContainer.appendChild(renderTiles(startWord));
+endContainer.appendChild(renderTiles(endWord));
+
 document.getElementById("puzzle-info").textContent = `Daily Bridge #${getDayIndex()}`;
 
 const ladderDiv = document.getElementById("ladder");
@@ -79,14 +83,37 @@ function diffOneLetter(prev, curr) {
 
 
 // --- DOM BUILD ---
-function addToLadder(word) {
-  ladder.push(word);
-  const el = document.createElement("div");
-  el.textContent = word.toUpperCase();
-  el.className = "ladder-word";
-  ladderDiv.appendChild(el);
+function renderTiles(word) {
+  const container = document.createElement("div");
+  container.className = "tile-row";
+
+  for (let char of word.toUpperCase()) {
+    const tile = document.createElement("div");
+    tile.className = "tile";
+    tile.textContent = char;
+    container.appendChild(tile);
+  }
+
+  return container;
 }
 
+function addToLadder(word) {
+  ladder.push(word);
+
+  // Create the row container
+  const row = document.createElement("div");
+  row.className = "ladder-word";
+
+  // Create 5 tiles, one for each letter
+  for (let char of word.toUpperCase()) {
+    const tile = document.createElement("div");
+    tile.className = "tile";
+    tile.textContent = char;
+    row.appendChild(tile);
+  }
+
+  ladderDiv.appendChild(row);
+}
 
 // --- ✔ NEW: Unified win logic ---
 function handleWin() {
