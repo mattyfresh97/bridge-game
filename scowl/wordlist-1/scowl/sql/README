@@ -1,8 +1,0 @@
-This directory contains scripts for converting SCOWL into a simple
-SQLite database for easier querying.
-
-To create the database run the create.sh script from scowl/ directory.
-It will create the file "scowl.db".
-
-The perl utility speller_lookup uses this database to check if a word
-is in one of the speller dictionaries.
