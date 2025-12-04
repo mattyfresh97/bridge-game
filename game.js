@@ -8,8 +8,7 @@ function getDayIndex() {
   const start = new Date("2025-01-01");
   const now = new Date();
   const diff = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-  // return diff % DAILY_PUZZLES.length;
-  return 0; // Override for testing
+  return 0; // override for testing
 }
 
 const puzzle = DAILY_PUZZLES[getDayIndex()];
@@ -18,18 +17,16 @@ const endWord = puzzle.end;
 
 
 // --- DOM ELEMENTS ---
-const startContainer = document.getElementById("start-word");
-const endContainer = document.getElementById("end-word");
-
-startContainer.appendChild(renderTiles(startWord));
-endContainer.appendChild(renderTiles(endWord));
-
-document.getElementById("puzzle-info").textContent = `Daily Bridge #${getDayIndex()}`;
-
 const ladderDiv = document.getElementById("ladder");
 const input = document.getElementById("guess-input");
-input.focus();  // <-- add this line
 const message = document.getElementById("message");
+
+// Render start/end words as tiles
+document.getElementById("start-word").appendChild(renderTiles(startWord));
+document.getElementById("end-word").appendChild(renderTiles(endWord));
+document.getElementById("puzzle-info").textContent = `Daily Bridge #${getDayIndex()}`;
+
+input.focus();
 
 
 // --- GAME STATE ---
@@ -41,7 +38,7 @@ let gameOver = false;
 function showMessage(msg, time = 2000) {
   message.textContent = msg;
 
-  // Shake the input box
+  // shake animation
   input.classList.add("shake");
   setTimeout(() => input.classList.remove("shake"), 350);
 
@@ -50,39 +47,12 @@ function showMessage(msg, time = 2000) {
   }
 }
 
-
 function isValidWord(word) {
   return VALID_WORDS.includes(word);
 }
 
 
-// --- ✔ FIXED exact-one-letter-change logic ---
-function diffOneLetter(prev, curr) {
-  if (prev.length !== 5 || curr.length !== 5) return false;
-
-  const countPrev = {};
-  const countCurr = {};
-
-  for (let c of prev) countPrev[c] = (countPrev[c] || 0) + 1;
-  for (let c of curr) countCurr[c] = (countCurr[c] || 0) + 1;
-
-  let diff = 0;
-
-  for (let c in countPrev) {
-    const prevCount = countPrev[c];
-    const currCount = countCurr[c] || 0;
-    diff += Math.abs(prevCount - currCount);
-  }
-
-  for (let c in countCurr) {
-    if (!countPrev[c]) diff += countCurr[c];
-  }
-
-  return diff === 2; // exactly 1 removed + 1 added
-}
-
-
-// --- DOM BUILD ---
+// --- TILE RENDERING ---
 function renderTiles(word) {
   const container = document.createElement("div");
   container.className = "tile-row";
@@ -97,14 +67,14 @@ function renderTiles(word) {
   return container;
 }
 
+
+// --- ADD LADDER ROW ---
 function addToLadder(word) {
   ladder.push(word);
 
-  // Create the row container
   const row = document.createElement("div");
   row.className = "ladder-word";
 
-  // Create 5 tiles, one for each letter
   for (let char of word.toUpperCase()) {
     const tile = document.createElement("div");
     tile.className = "tile";
@@ -115,42 +85,82 @@ function addToLadder(word) {
   ladderDiv.appendChild(row);
 }
 
-// --- ✔ NEW: Unified win logic ---
+
+// ------------------------------------------------------------
+// NEW: UNIVERSAL ONE-MOVE-AWAY CHECK (add/remove/substitute)
+// ------------------------------------------------------------
+function isOneMoveAway(a, b) {
+  // Same length → substitute rule
+  if (a.length === b.length) {
+    const countA = {};
+    const countB = {};
+
+    for (let c of a) countA[c] = (countA[c] || 0) + 1;
+    for (let c of b) countB[c] = (countB[c] || 0) + 1;
+
+    let diff = 0;
+    for (let c in countA) diff += Math.abs((countB[c] || 0) - countA[c]);
+    for (let c in countB) if (!countA[c]) diff += countB[c];
+
+    return diff === 2;  // one removed + one added
+  }
+
+  // Length differs by 1 → add/remove rule
+  if (Math.abs(a.length - b.length) === 1) {
+    const longer = a.length > b.length ? a : b;
+    const shorter = a.length > b.length ? b : a;
+
+    const countLong = {};
+    const countShort = {};
+
+    for (let c of longer) countLong[c] = (countLong[c] || 0) + 1;
+    for (let c of shorter) countShort[c] = (countShort[c] || 0) + 1;
+
+    let diff = 0;
+    for (let c in countLong) diff += Math.abs((countShort[c] || 0) - countLong[c]);
+
+    return diff === 1; // exactly one extra letter
+  }
+
+  return false;
+}
+
+
+// --- WIN HANDLER ---
 function handleWin() {
   const steps = ladder.length - 1;
   showMessage(`Bridge complete in ${steps} steps! 🎉`, 0);
 
-  // Confetti burst
   confetti({
-      particleCount: 150,
-      spread: 70,
-      origin: { y: 0.6 }
+    particleCount: 150,
+    spread: 70,
+    origin: { y: 0.6 }
   });
 
-  // Lock game
   gameOver = true;
   input.disabled = true;
-  document.getElementById("submit-btn").disabled = true;
 
-  // Reveal banner
   const banner = document.getElementById("next-banner");
   banner.classList.remove("hidden");
   setTimeout(() => banner.classList.add("show"), 50);
 }
 
 
-// --- MAIN ACTION ---
-document.getElementById("submit-btn").onclick = () => {
-  
+// --- MAIN SUBMIT LOGIC ---
+function submitGuess() {
   if (gameOver) return;
 
   const guess = input.value.toLowerCase();
   input.value = "";
+  input.focus();
 
-  input.focus();  // <-- add this line
+  if (!guess.match(/^[a-z]+$/)) {
+    showMessage("Letters only!");
+    return;
+  }
 
-  if (guess.length !== 5) {
-    showMessage("Must be 5 letters!");
+  if (guess.length < 4 || guess.length > 6) {
+    showMessage("Word must be 4–6 letters!");
     return;
   }
 
@@ -160,47 +170,85 @@ document.getElementById("submit-btn").onclick = () => {
   }
 
   const prev = ladder[ladder.length - 1];
-  if (!diffOneLetter(prev, guess)) {
-    showMessage("Must change exactly ONE letter!");
+
+  // Must be a valid one-step transformation
+  if (!isOneMoveAway(prev, guess)) {
+    showMessage("Must change exactly one letter!");
     return;
   }
 
-  // Add user's valid move
   addToLadder(guess);
 
-  // ⭐ NEW: Auto-complete if the guess is one letter away from the end word
-  if (diffOneLetter(guess, endWord)) {
-    // Do NOT add endWord to ladder — it's already shown in UI
+  // WIN CHECK — Automatically win WITHOUT typing final word
+  if (isOneMoveAway(guess, endWord) || guess === endWord) {
     handleWin();
     return;
   }
+}
 
-  // OLD: Manual completion (kept for safety)
-  if (guess === endWord) {
-    handleWin();
-    return;
-  }
-};
 
-// --- ENTER KEY SUPPORT ---
+// --- ENTER KEY (desktop) ---
 input.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    document.getElementById("submit-btn").click();
-  }
+  if (e.key === "Enter") submitGuess();
 });
 
-// --- UNDO LAST STEP (Backspace when input is empty) ---
+
+// --- UNDO on Backspace (desktop) ---
 document.addEventListener("keydown", (e) => {
-  if (gameOver) return;  
-  if (e.key !== "Backspace") return;  
-  if (input.value.length !== 0) return;  // only undo when input is empty
-  if (ladder.length <= 1) return;  // don't remove start word
+  if (gameOver) return;
+  if (e.key !== "Backspace") return;
+  if (input.value.length !== 0) return;
+  if (ladder.length <= 1) return;
 
-  // Remove last ladder entry
   ladder.pop();
-
-  // Remove last DOM element
   ladderDiv.removeChild(ladderDiv.lastElementChild);
-
   showMessage("Step undone");
+});
+
+// // --- HELP MODAL OPEN ---
+// const helpBtn = document.getElementById("help-btn");
+// if (helpBtn) {
+//   helpBtn.addEventListener("click", (e) => {
+//     e.stopPropagation();
+//     const modal = document.getElementById("help-modal");
+//     if (modal) modal.classList.add("open");
+//   });
+// }
+
+// // --- HELP MODAL CLOSE ---
+// const closeHelp = document.getElementById("close-help");
+// if (closeHelp) {
+//   closeHelp.addEventListener("click", () => {
+//     const modal = document.getElementById("help-modal");
+//     if (modal) modal.classList.remove("open");
+//     input.focus(); // optional - refocus input for smooth gameplay
+//   });
+// }
+
+
+// --- HELP MODAL OPEN/CLOSE (SAFE VERSION) ---
+document.addEventListener("DOMContentLoaded", () => {
+  const helpBtn = document.getElementById("help-btn");
+  const helpModal = document.getElementById("help-modal");
+  const closeHelp = document.getElementById("close-help");
+
+  if (!helpBtn || !helpModal || !closeHelp) {
+    console.warn("Help modal elements not found.");
+    return;
+  }
+
+  helpBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    helpModal.classList.remove("hidden");
+  });
+
+  closeHelp.addEventListener("click", () => {
+    helpModal.classList.add("hidden");
+  });
+
+  helpModal.addEventListener("click", (e) => {
+    if (e.target === helpModal) {
+      helpModal.classList.add("hidden");
+    }
+  });
 });

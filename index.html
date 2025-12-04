@@ -9,9 +9,24 @@
 <body>
   <h1>BRIDGE</h1>
 
-  <div id="instructions">
-    Change one letter at a time to build a bridge from the start word to the end word.<br>
-    Letters can be rearranged, and each step must be a valid 5-letter word. <br>
+  <button id="help-btn">?</button>
+
+  <div id="help-modal" class="hidden">
+    <div id="help-content">
+      <h2>How to Play</h2>
+        <p>
+          Build a path from the start word to the end word. <br>
+          Each step must change the word by exactly one letter:
+          <ul>
+            <li>Add one letter</li>
+            <li>Remove one letter</li>
+            <li>Substitute one letter</li>
+          </ul>
+          You may rearrange letters freely. Every step must form a valid word.
+        </p>
+  
+      <button id="close-help">Close</button>
+    </div>
   </div>
 
   <div id="puzzle-info"></div>
@@ -20,8 +35,7 @@
   <div id="ladder"></div>
   <div id="end-word" class="endpoint"></div>
 
-    <input id="guess-input" maxlength="5" autocapitalize="none" />
-    <button id="submit-btn">Add Step</button>  
+    <input id="guess-input" maxlength="6" autocapitalize="none" inputmode="none"/>
 
   <div id="message"></div>
 
@@ -32,5 +46,6 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <!-- ⬇️ IMPORTANT: game.js is now a module -->
   <script type="module" src="game.js"></script>
+  
 </body>
 </html>
