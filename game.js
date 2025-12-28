@@ -143,8 +143,18 @@ function handleWin() {
   const banner = document.getElementById("next-banner");
   banner.classList.remove("hidden");
   setTimeout(() => banner.classList.add("show"), 50);
+  document.getElementById("share-btn").classList.remove("hidden");
 }
 
+function showCopyStatus(msg) {
+  const copyStatus = document.getElementById("copy-status");
+  copyStatus.textContent = msg;
+  copyStatus.style.opacity = 1;
+
+  setTimeout(() => {
+    copyStatus.style.opacity = 0;
+  }, 2000);
+}
 
 // --- MAIN SUBMIT LOGIC ---
 function submitGuess() {
@@ -252,3 +262,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+const shareBtn = document.getElementById("share-btn");
+
+shareBtn.onclick = () => {
+  const steps = ladder.length - 1;
+  const day = getDayIndex();
+
+  const shareText =
+    `BRIDGE #${day}\n` +
+    `Solved in ${steps} steps!\n\n` +
+    `https://matthews-bridge-game.netlify.app/`;
+
+  navigator.clipboard.writeText(shareText)
+    .then(() => showCopyStatus("Copied to clipboard!"))
+    .catch(() => showCopyStatus("Copy failed 😢"));
+};
