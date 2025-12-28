@@ -32,7 +32,7 @@ input.focus();
 // --- GAME STATE ---
 let ladder = [startWord];
 let gameOver = false;
-
+const MAX_STEPS = 6;
 
 // --- UTILS ---
 function showMessage(msg, time = 2000) {
@@ -83,6 +83,22 @@ function addToLadder(word) {
   }
 
   ladderDiv.appendChild(row);
+}
+
+function buildEmojiRow(word) {
+  const targetLetters = new Set(endWord.toUpperCase().split(""));
+  return word
+    .toUpperCase()
+    .split("")
+    .map(letter => (targetLetters.has(letter) ? "🟩" : "⬛"))
+    .join("");
+}
+
+function buildEmojiGrid() {
+  return ladder
+    .slice(1) // exclude start word
+    .map(buildEmojiRow)
+    .join("\n");
 }
 
 
@@ -138,7 +154,7 @@ function handleWin() {
   });
 
   gameOver = true;
-  input.disabled = true;
+  input.classList.add("hidden");
 
   const banner = document.getElementById("next-banner");
   banner.classList.remove("hidden");
@@ -155,6 +171,17 @@ function showCopyStatus(msg) {
     copyStatus.style.opacity = 0;
   }, 2000);
 }
+
+function updateInputState() {
+  if (ladder.length - 1 >= MAX_STEPS) {
+    input.disabled = true;
+    showMessage("Max steps reached! 😬", 0);
+  } else {
+    input.disabled = false;
+    input.focus();
+  }
+}
+
 
 // --- MAIN SUBMIT LOGIC ---
 function submitGuess() {
@@ -181,20 +208,22 @@ function submitGuess() {
 
   const prev = ladder[ladder.length - 1];
 
-  // Must be a valid one-step transformation
   if (!isOneMoveAway(prev, guess)) {
     showMessage("Must change exactly one letter!");
     return;
   }
 
   addToLadder(guess);
+  updateInputState();
 
-  // WIN CHECK — Automatically win WITHOUT typing final word
+
+  // ✅ WIN CHECK
   if (isOneMoveAway(guess, endWord) || guess === endWord) {
     handleWin();
     return;
   }
 }
+
 
 
 // --- ENTER KEY (desktop) ---
@@ -213,6 +242,8 @@ document.addEventListener("keydown", (e) => {
   ladder.pop();
   ladderDiv.removeChild(ladderDiv.lastElementChild);
   showMessage("Step undone");
+  updateInputState();
+
 });
 
 // // --- HELP MODAL OPEN ---
@@ -268,10 +299,12 @@ const shareBtn = document.getElementById("share-btn");
 shareBtn.onclick = () => {
   const steps = ladder.length - 1;
   const day = getDayIndex();
+  const emojiGrid = buildEmojiGrid();
 
   const shareText =
     `BRIDGE #${day}\n` +
-    `Solved in ${steps} steps!\n\n` +
+    `${gameOver ? "Solved" : "Unsolved"} in ${steps} steps\n\n` +
+    `${emojiGrid}\n\n` +
     `https://matthews-bridge-game.netlify.app/`;
 
   navigator.clipboard.writeText(shareText)
