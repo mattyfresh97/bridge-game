@@ -8,7 +8,7 @@ function getDayIndex() {
   const start = new Date("2025-01-01");
   const now = new Date();
   const diff = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-  return 0; // override for testing
+  return 1; // override for testing
 }
 
 const puzzle = DAILY_PUZZLES[getDayIndex()];
@@ -302,10 +302,11 @@ shareBtn.onclick = () => {
   const emojiGrid = buildEmojiGrid();
 
   const shareText =
-    `BRIDGE #${day}\n` +
-    `${gameOver ? "Solved" : "Unsolved"} in ${steps} steps\n\n` +
-    `${emojiGrid}\n\n` +
-    `https://matthews-bridge-game.netlify.app/`;
+  `BRIDGE #${day}\n` +
+  `${startWord.toUpperCase()} → ${endWord.toUpperCase()}\n` +
+  `Solved in ${steps} steps\n\n` +
+  `${emojiGrid}\n\n` +
+  `https://matthews-bridge-game.netlify.app/`;
 
   navigator.clipboard.writeText(shareText)
     .then(() => showCopyStatus("Copied to clipboard!"))
