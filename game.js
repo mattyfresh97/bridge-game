@@ -311,3 +311,40 @@ shareBtn.onclick = () => {
     .then(() => showCopyStatus("Copied to clipboard!"))
     .catch(() => showCopyStatus("Copy failed 😢"));
 };
+
+// --- KEYPAD → INPUT (DESKTOP ONLY) ---
+const keypad = document.getElementById("keypad");
+
+keypad.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  if (gameOver) return;
+
+  const key = btn.dataset.key;
+  if (!key) return;
+
+  // ENTER submits
+  if (key === "ENTER") {
+    submitGuess();
+    return;
+  }
+
+  // Backspace logic (matches keyboard behavior)
+  if (key === "⌫") {
+    if (input.value.length > 0) {
+      // Delete character
+      input.value = input.value.slice(0, -1);
+    } else if (ladder.length > 1) {
+      // Undo ladder step
+      ladder.pop();
+      ladderDiv.removeChild(ladderDiv.lastElementChild);
+      showMessage("Step undone");
+    }
+    return;
+  }
+
+  // Letter input
+  if (input.value.length < 6) {
+    input.value += key.toLowerCase();
+  }
+});
